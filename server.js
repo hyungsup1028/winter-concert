@@ -1,6 +1,5 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
+const { Pool } = require("pg");
 const QRCode = require("qrcode");
 
 const app = express();
@@ -17,19 +16,22 @@ const EVENT = {
   price: 250000
 };
 
-const DATA_FILE = path.join(__dirname, "reservations.json");
-if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, "[]", "utf8");
-
-function readReservations() {
-  try {
-    return JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
-  } catch {
-    return [];
-  }
+if (!process.env.DATABASE_URL) {
+  console.error("DATABASE_URL 환경변수가 없습니다.");
+  process.exit(1);
 }
 
-function writeReservations(rows) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(rows, null, 2), "utf8");
+const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+
+async function initDb() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS reservations (
+      seat TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      reserved_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      ticket_id TEXT NOT NULL UNIQUE
+    )
+  `);
 }
 
 function isOpen() {
@@ -37,16 +39,22 @@ function isOpen() {
 }
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static("public"));
 
-app.get("/api/status", (req, res) => {
-  res.json({
-    openAt: OPEN_AT.toISOString(),
-    open: isOpen(),
-    seats: EVENT.seats,
-    reservations: readReservations().map(x => ({seat:x.seat, name:x.name})),
-    event: EVENT
-  });
+app.get("/api/status", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT seat, name FROM reservations ORDER BY seat");
+    res.json({
+      openAt: OPEN_AT.toISOString(),
+      open: isOpen(),
+      seats: EVENT.seats,
+      reservations: result.rows,
+      event: EVENT
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "상태를 불러오지 못했어요." });
+  }
 });
 
 app.post("/api/reserve", async (req, res) => {
@@ -61,28 +69,21 @@ app.post("/api/reserve", async (req, res) => {
     if (!name) return res.status(400).json({ error: "이름을 입력해주세요." });
     if (!EVENT.seats.includes(seat)) return res.status(400).json({ error: "좌석을 확인해주세요." });
 
-    const rows = readReservations();
-
-    // Node.js의 한 요청 처리는 이 코드가 끝날 때까지 다른 JS 요청이 끼어들지 않으므로
-    // 같은 좌석을 동시에 요청해도 먼저 처리된 한 건만 저장된다.
-    if (rows.some(x => x.seat === seat)) {
-      return res.status(409).json({ error: "앗! 방금 다른 사람이 먼저 선택한 좌석이에요." });
-    }
-
     const ticketId = `WINTER-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 
-    rows.push({
-      seat,
-      name,
-      reserved_at: new Date().toISOString(),
-      ticketId
-    });
-    writeReservations(rows);
+    try {
+      await pool.query(
+        "INSERT INTO reservations (seat, name, ticket_id) VALUES ($1, $2, $3)",
+        [seat, name, ticketId]
+      );
+    } catch (e) {
+      if (e.code === "23505") {
+        return res.status(409).json({ error: "앗! 방금 다른 사람이 먼저 선택한 좌석이에요." });
+      }
+      throw e;
+    }
 
-    // QR을 스캔하면 이 콘서트의 쿼카 이미지를 바로 보여줍니다.
-    // Render에 배포하면 현재 접속한 사이트 주소를 자동으로 사용합니다.
     const qrUrl = `${req.protocol}://${req.get("host")}/quokka-ticket.jpg`;
-
     const qr = await QRCode.toDataURL(qrUrl, {
       errorCorrectionLevel: "H",
       margin: 2,
@@ -96,7 +97,7 @@ app.post("/api/reserve", async (req, res) => {
       name,
       seat,
       price: EVENT.price,
-      finalPrice: 20000,
+      finalPrice: 0,
       qr
     });
   } catch (e) {
@@ -105,6 +106,9 @@ app.post("/api/reserve", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Winter concert server running on port ${PORT}`);
-});
+initDb()
+  .then(() => app.listen(PORT, () => console.log(`Winter concert server running on port ${PORT}`)))
+  .catch((e) => {
+    console.error("DB 초기화 실패:", e);
+    process.exit(1);
+  });
