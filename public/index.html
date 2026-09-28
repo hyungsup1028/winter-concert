@@ -1,39 +1,208 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>겨울 단독콘서트</title>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>겨울 단독콘서트 티켓팅</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#080a0f;color:#f5f7fb;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif}
-.wrap{max-width:720px;margin:auto;padding:24px 18px 50px}.hero{text-align:center;padding:38px 0}.ey{letter-spacing:4px;font-size:11px;color:#9ba3b2}.title{font-size:38px;font-weight:900;margin:12px}.date{color:#cdd2db}.card{background:#12161f;border:1px solid #29303d;border-radius:20px;padding:22px;margin-top:18px}
-.notice{text-align:center;border:1px dashed #414957;border-radius:15px;padding:24px}.clock{font-size:34px;font-weight:900;font-variant-numeric:tabular-nums;margin:10px}
-.stage{width:72%;margin:0 auto 25px;text-align:center;background:#eef1f5;color:#111;padding:11px;border-radius:8px;font-weight:900;letter-spacing:3px}
-.seats{display:flex;justify-content:center;gap:10px}.seat{width:78px;height:60px;border-radius:12px;border:1px solid #505867;background:#171c25;color:white;font-weight:800;cursor:pointer}.seat.selected{background:#fff;color:#111}.seat.sold{background:#464d59;color:#8e96a4;cursor:not-allowed;text-decoration:line-through}
-input{width:100%;padding:14px;background:#0b0e13;border:1px solid #343b48;border-radius:12px;color:white;margin:18px 0 12px;font-size:15px}
-button.reserve{width:100%;padding:15px;border:0;border-radius:12px;font-weight:900;font-size:16px;background:#f2f4f7;color:#111}button:disabled{opacity:.35}
-.ticket{background:linear-gradient(135deg,#1b202b,#0d1016);border:1px solid #5a6372;border-radius:18px;padding:24px}.ticketno{font-size:12px;color:#aeb5c2;letter-spacing:2px}.qr{width:160px;height:160px;background:repeating-linear-gradient(45deg,#fff 0 4px,#111 4px 8px);border:10px solid white;margin:18px auto}
-.hidden{display:none}.msg{text-align:center;color:#ffb4b4;margin-top:10px;font-size:13px}
-</style></head><body><div class="wrap">
-<div class="hero"><div class="ey">WINTER SOLO CONCERT</div><div class="title">겨울 단독콘서트</div><div class="date">2026. 10. 11 SUN · 13:00</div></div>
-<section id="lock" class="card"><div class="notice"><div>티켓 오픈까지</div><div id="clock" class="clock">--:--:--</div><div id="locktext">오늘 16:00 티켓 오픈</div></div></section>
-<section id="book" class="card hidden"><h2>좌석 선택</h2><div class="stage">STAGE</div><div id="seats" class="seats"></div>
-<input id="name" placeholder="예매자 이름 또는 닉네임" maxlength="20"><button id="go" class="reserve" disabled>예매하기</button><div id="msg" class="msg"></div></section>
-<section id="ticket" class="card hidden"><div class="ticket"><div class="ticketno" id="tn"></div><h2>겨울 단독콘서트</h2><p>2026. 10. 11 SUN · 13:00</p><p id="who"></p><p id="seat"></p><div class="qr"></div><div style="text-align:center;color:#aeb5c2;font-size:12px">입장 시 이 화면을 보여주세요.</div></div></section>
+*{box-sizing:border-box}
+body{margin:0;background:#f4efe8;color:#2b2622;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:28px 18px 60px}
+.hero{background:linear-gradient(145deg,#fffaf4,#f0e1d0);border:1px solid #e0d0bf;border-radius:28px;padding:30px 24px;text-align:center;box-shadow:0 12px 35px #00000012}
+.badge{display:inline-block;background:#2b2622;color:#fff;padding:7px 12px;border-radius:999px;font-size:12px;letter-spacing:1px}
+h1{font-size:38px;margin:15px 0 8px}
+.sub{color:#766d66;margin:0}
+.info{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
+.info div{background:#ffffffaa;border-radius:14px;padding:13px}
+.label{font-size:12px;color:#8c8178}.value{font-weight:800;margin-top:4px}
+.card{background:white;border:1px solid #e4ddd6;border-radius:22px;padding:22px;margin-top:18px;box-shadow:0 8px 25px #0000000b}
+.hidden{display:none!important}
+h2{margin:0 0 15px;font-size:20px}
+.notice{text-align:center;background:#fff6df;border:1px dashed #d7b86a;border-radius:14px;padding:13px;font-size:14px}
+.countdown{font-size:25px;font-weight:900;text-align:center;margin:14px 0}
+.stage{width:72%;margin:0 auto 25px;background:#27211e;color:white;padding:13px;border-radius:12px;text-align:center;font-weight:800;letter-spacing:3px}
+.seats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;max-width:680px;margin:auto}.seats.one-row{grid-template-columns:repeat(5,1fr)}
+.seat{border:0;border-radius:15px;background:#ead7c5;padding:17px 8px;font-size:17px;font-weight:900;cursor:pointer;min-height:60px}
+.seat:hover{transform:translateY(-1px)}.seat.sold{background:#ddd;color:#aaa;cursor:not-allowed}.seat.selected{background:#6d513e;color:white}
+input{width:100%;padding:15px;border:1px solid #d8cec5;border-radius:12px;font-size:16px;margin-bottom:12px}
+button.primary{width:100%;padding:16px;border:0;border-radius:13px;background:#2b2622;color:#fff;font-size:17px;font-weight:900;cursor:pointer}
+button.primary:disabled{opacity:.4;cursor:not-allowed}
+.small{font-size:12px;color:#897e75;text-align:center;margin-top:9px}
+.summary{background:#faf7f3;border-radius:16px;padding:16px}
+.row{display:flex;justify-content:space-between;padding:7px 0}.total{border-top:1px solid #ddd1c5;margin-top:8px;padding-top:14px;font-size:20px;font-weight:900}
+.discount{color:#a64b3f}.final{font-size:28px;color:#2b2622}
+.pay-note{background:#f3f0ec;border-radius:12px;padding:12px;font-size:13px;margin:12px 0}
+.ticket{position:relative;overflow:hidden;background:linear-gradient(145deg,#fff,#fff7ef);border:2px solid #d9c0a8;border-radius:26px;padding:25px;text-align:center}
+.ticket:before,.ticket:after{content:"";position:absolute;width:28px;height:28px;background:#f4efe8;border-radius:50%;top:50%;transform:translateY(-50%)}
+.ticket:before{left:-15px}.ticket:after{right:-15px}
+.quokka{width:110px;height:92px;margin:0 auto 12px;position:relative;background:#b98561;border-radius:48% 48% 43% 43%}
+.quokka:before,.quokka:after{content:"";position:absolute;top:-16px;width:34px;height:34px;background:#b98561;border-radius:50% 50% 40% 40%}
+.quokka:before{left:8px}.quokka:after{right:8px}
+.eye{position:absolute;top:33px;width:8px;height:8px;background:#30251f;border-radius:50%}.eye.l{left:31px}.eye.r{right:31px}
+.nose{position:absolute;left:50%;top:49px;transform:translateX(-50%);width:13px;height:9px;background:#3a2922;border-radius:50%}
+.smile{position:absolute;left:50%;top:54px;width:25px;height:13px;transform:translateX(-50%);border-bottom:3px solid #3a2922;border-radius:0 0 20px 20px}
+.qr{background:white;padding:10px;border-radius:15px;display:inline-block;margin:12px 0}
+.ticket-id{font-size:11px;color:#887b71;word-break:break-all}
+@media(max-width:520px){h1{font-size:31px}.info{grid-template-columns:1fr}.seats{gap:8px}.seat{padding:14px 4px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <span class="badge">WINTER SOLO CONCERT</span>
+    <h1>겨울 단독콘서트</h1>
+    
+    <div class="info">
+      <div><div class="label">공연일</div><div class="value">2026. 10. 11 (일)</div></div>
+      <div><div class="label">공연시간</div><div class="value">13:00</div></div>
+    </div>
+  </section>
+
+  <section id="lock" class="card">
+    <div class="notice">🎫 티켓팅 시작까지</div>
+    <div id="countdown" class="countdown">확인 중...</div>
+    <div class="small">2026년 9월 30일 00:00 (한국시간) 오픈</div>
+  </section>
+
+  <section id="book" class="card hidden">
+    <h2>🎟️ 좌석 선택</h2>
+    <div class="stage">STAGE</div>
+    <div id="seats" class="seats one-row"></div>
+    <div style="height:16px"></div>
+    <input id="name" maxlength="20" placeholder="예매자 이름을 입력해주세요">
+    <button id="go" class="primary" disabled>좌석을 먼저 선택해주세요</button>
+    <div id="msg" class="small"></div>
+  </section>
+
+  <section id="pay" class="card hidden">
+    <h2>💳 결제 확인</h2>
+    <div class="summary">
+      <div class="row"><span>겨울 단독콘서트</span><b id="paySeat"></b></div>
+      <div class="row"><span>티켓 정가</span><b>250,000원</b></div>
+      <div class="row discount"><span>보겜 좋아 특별 할인</span><b>-50,000원</b></div>
+      <div class="row discount"><span>친구 할인</span><b>-50,000원</b></div>
+      <div class="row discount"><span>홀덤왕 김겨울 포커 1등 상금</span><b>-70,000원</b></div>
+      <div class="row discount"><span>깜짝 이벤트 할인</span><b>-80,000원</b></div>
+      <div class="row total"><span>최종 결제금액</span><b class="final">0원</b></div>
+    </div>
+    <div class="pay-note">※  </div>
+    <button id="payBtn" class="primary">0원 결제하기</button>
+    <div id="payMsg" class="small"></div>
+  </section>
+
+  <section id="ticket" class="card hidden">
+    <div class="ticket">
+      <div class="quokka">
+        <i class="eye l"></i><i class="eye r"></i><i class="nose"></i><i class="smile"></i>
+      </div>
+      <h2>🎟️ 예매 완료!</h2>
+      <p><b id="ticketName"></b>님, 공연장에서 만나요!</p>
+      <p><b>2026. 10. 11 (일) 13:00</b></p>
+      <p>좌석 <b id="ticketSeat"></b></p>
+      <div class="qr"><img id="qr" width="260" height="260" alt="예매 QR"></div>
+      <div class="ticket-id" id="ticketId"></div>
+      <p class="small">🐹 쿼카 티켓 · 화면을 보여주면 됩니다.</p>
+    </div>
+  </section>
 </div>
+
 <script>
-let status=null,selected=null;
-async function get(){const r=await fetch("/api/status");status=await r.json();render()}
-function render(){
- const open=status?.open;
- document.getElementById("lock").classList.toggle("hidden",open);
- document.getElementById("book").classList.toggle("hidden",!open);
- const sold=new Set((status?.reservations||[]).map(x=>x.seat));
- const box=document.getElementById("seats"); box.innerHTML="";
- (status?.seats||["A1","A2","A3","A4","A5"]).forEach(s=>{const b=document.createElement("button");b.className="seat";b.textContent=s;
- if(sold.has(s)){b.classList.add("sold");b.disabled=true}else if(selected===s)b.classList.add("selected");
- b.onclick=()=>{selected=s;document.getElementById("go").disabled=!document.getElementById("name").value.trim();render()};box.appendChild(b)});
+let status = null;
+let selected = null;
+let reservation = null;
+
+async function getStatus(){
+  const r = await fetch("/api/status");
+  status = await r.json();
+  render();
 }
-function clock(){if(!status)return;const d=Math.max(0,new Date(status.openAt)-new Date());const h=Math.floor(d/36e5),m=Math.floor(d%36e5/6e4),s=Math.floor(d%6e4/1e3);document.getElementById("clock").textContent=d?"".concat(String(h).padStart(2,"0"),":",String(m).padStart(2,"0"),":",String(s).padStart(2,"0")):"OPEN";if(d===0)get()}
-document.getElementById("name").oninput=()=>document.getElementById("go").disabled=!(selected&&document.getElementById("name").value.trim());
-document.getElementById("go").onclick=async()=>{const r=await fetch("/api/reserve",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:document.getElementById("name").value.trim(),seat:selected})});const j=await r.json();if(!r.ok){document.getElementById("msg").textContent=j.error;selected=null;await get();return}
-document.getElementById("book").classList.add("hidden");document.getElementById("ticket").classList.remove("hidden");document.getElementById("tn").textContent=j.ticket.ticketNo;document.getElementById("who").textContent="예매자: "+j.ticket.name;document.getElementById("seat").textContent="좌석: "+j.ticket.seat};
-get();setInterval(clock,250);setInterval(get,3000);
-</script></body></html>
+
+function render(){
+  const open = status.open;
+  document.getElementById("lock").classList.toggle("hidden", open);
+  document.getElementById("book").classList.toggle("hidden", !open);
+
+  if(open) renderSeats();
+}
+
+function renderSeats(){
+  const box = document.getElementById("seats");
+  box.innerHTML = "";
+  const sold = new Set(status.reservations.map(x => x.seat));
+
+  status.seats.forEach(seat => {
+    const b = document.createElement("button");
+    b.className = "seat";
+    b.textContent = sold.has(seat) ? seat + " · 매진" : seat;
+    if(sold.has(seat)) b.classList.add("sold"), b.disabled = true;
+    if(selected === seat) b.classList.add("selected");
+    b.onclick = () => {
+      selected = seat;
+      document.getElementById("go").disabled = false;
+      document.getElementById("go").textContent = `${seat} 좌석 선택 후 결제하기`;
+      renderSeats();
+    };
+    box.appendChild(b);
+  });
+}
+
+function tick(){
+  if(!status || status.open){
+    if(status) render();
+    return;
+  }
+  const d = Math.max(0, new Date(status.openAt) - new Date());
+  const sec = Math.floor(d/1000);
+  const day = Math.floor(sec/86400);
+  const h = Math.floor(sec%86400/3600);
+  const m = Math.floor(sec%3600/60);
+  const s = sec%60;
+  document.getElementById("countdown").textContent =
+    `${day}일 ${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+
+document.getElementById("go").onclick = async () => {
+  const name = document.getElementById("name").value.trim();
+  if(!name) return document.getElementById("msg").textContent = "이름을 먼저 입력해주세요.";
+  if(!selected) return;
+
+  // 좌석은 이 단계에서 서버에 먼저 확정한다.
+  const r = await fetch("/api/reserve", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({name, seat:selected})
+  });
+  const data = await r.json();
+
+  if(!r.ok){
+    document.getElementById("msg").textContent = data.error || "예매에 실패했어요.";
+    selected = null;
+    await getStatus();
+    return;
+  }
+
+  reservation = data;
+  document.getElementById("paySeat").textContent = data.seat;
+  document.getElementById("book").classList.add("hidden");
+  document.getElementById("pay").classList.remove("hidden");
+  window.scrollTo({top:document.getElementById("pay").offsetTop-20,behavior:"smooth"});
+};
+
+document.getElementById("payBtn").onclick = () => {
+  document.getElementById("ticketName").textContent = reservation.name;
+  document.getElementById("ticketSeat").textContent = reservation.seat;
+  document.getElementById("ticketId").textContent = reservation.ticketId;
+  document.getElementById("qr").src = reservation.qr;
+
+  document.getElementById("pay").classList.add("hidden");
+  document.getElementById("ticket").classList.remove("hidden");
+  window.scrollTo({top:document.getElementById("ticket").offsetTop-20,behavior:"smooth"});
+};
+
+getStatus();
+setInterval(getStatus, 3000);
+setInterval(tick, 1000);
+tick();
+</script>
+</body>
+</html>

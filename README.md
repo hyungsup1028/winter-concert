@@ -1,10 +1,13 @@
 # 겨울 단독콘서트 티켓팅
 
-- 티켓 오픈: 2026-09-24 16:00 (한국시간)
 - 공연: 2026-10-11 13:00
-- 좌석: A1~A5
-- 서버 DB에서 좌석 UNIQUE 제약으로 동시 예매 충돌을 방지합니다.
-- 관리자 API: `GET /api/admin` + `x-admin-key` 헤더
-- 실행: `npm install` → `ADMIN_KEY=원하는키 npm start`
+- 좌석: A1~A5 (스테이지 앞 1열, 총 5석)
+- 티켓팅 오픈: 2026-09-30 00:00 (한국시간)
+- 예매 완료 후 쿼카 QR 티켓 표시
+- QR 스캔 시 `quokka-ticket.jpg` 표시
 
-친구들에게 공유하려면 Node.js 앱을 배포할 수 있는 호스팅 서비스에 이 폴더를 올리면 됩니다.
+## Render 배포
+Build Command: `npm install`
+Start Command: `npm start`
+
+이 프로젝트는 실제 결제대행사를 연결하지 않은 웹 예매 페이지입니다.
